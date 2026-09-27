@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/expense_model.dart';
 import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/category_breakdown.dart';
 import '../widgets/expense_summary_card.dart';
 import '../widgets/expense_tile.dart';
@@ -32,6 +33,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final FirebaseService _firebaseService = FirebaseService();
+  final AuthService _authService = AuthService();
 
   // Stream reference that can be recreated for a retry
   late Stream<List<Expense>> _expensesStream;
@@ -60,7 +62,9 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Initialize or refresh the real-time stream
   void _initStream() {
     setState(() {
-      _expensesStream = _firebaseService.getExpensesStream();
+      _expensesStream = _firebaseService.getExpensesStream(
+        userId: _authService.currentUser?.uid,
+      );
     });
   }
 
@@ -190,6 +194,33 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
+  /// Show confirmation dialog when user taps Sign Out
+  void _confirmSignOut() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await _authService.signOut();
+            },
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -248,6 +279,64 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(widget.isDarkMode ? Icons.light_mode : Icons.dark_mode),
             tooltip: widget.isDarkMode ? 'Light Mode' : 'Dark Mode',
             onPressed: widget.onToggleTheme,
+          ),
+
+          // User Account & Logout Menu
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.account_circle_outlined),
+            tooltip: 'Account',
+            onSelected: (val) {
+              if (val == 'logout') {
+                _confirmSignOut();
+              }
+            },
+            itemBuilder: (context) {
+              final user = _authService.currentUser;
+              return [
+                PopupMenuItem(
+                  enabled: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        user?.nameToShow ?? 'Signed In User',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.teal,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        user?.email ?? '',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Divider(height: 1),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: Colors.redAccent, size: 20),
+                      SizedBox(width: 10),
+                      Text(
+                        'Sign Out',
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ];
+            },
           ),
         ],
       ),

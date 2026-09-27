@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'models/user_model.dart';
+import 'services/auth_service.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() async {
   // Ensure Flutter engine bindings are initialized
@@ -71,9 +74,27 @@ class _ExpenseTrackerAppState extends State<ExpenseTrackerApp> {
 
       themeMode: _themeMode,
 
-      home: HomeScreen(
-        onToggleTheme: _toggleTheme,
-        isDarkMode: _themeMode == ThemeMode.dark,
+      // Authentication wrapper: switches between LoginScreen and HomeScreen
+      home: StreamBuilder<AppUser?>(
+        stream: AuthService().authStateChanges,
+        initialData: AuthService().currentUser,
+        builder: (context, snapshot) {
+          final user = snapshot.data;
+          final isDark = _themeMode == ThemeMode.dark;
+
+          if (user != null) {
+            return HomeScreen(
+              key: ValueKey(user.uid),
+              onToggleTheme: _toggleTheme,
+              isDarkMode: isDark,
+            );
+          }
+
+          return LoginScreen(
+            onToggleTheme: _toggleTheme,
+            isDarkMode: isDark,
+          );
+        },
       ),
     );
   }

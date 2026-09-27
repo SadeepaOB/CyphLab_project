@@ -28,7 +28,12 @@ The project is intentionally designed with simplicity and readability in mind:
    - Amount must be a valid positive number (`> 0`).
    - Category is required.
    - Date is required.
-9. **Three Robust UI States**:
+9. **Authentication & User Management**:
+   - **Login & Sign Up Flow**: Dedicated, elegant screens with email/password validation, show/hide password toggling, and forgot password reset link dialog.
+   - **User-Scoped Expenses**: Expenses are associated with the authenticated user (`userId`), keeping records private and organized.
+   - **1-Tap Quick Demo Login**: Instant reviewer evaluation without configuring Firebase credentials or registering an account.
+   - **User Profile & Logout**: AppBar account popup displaying current user name, email, and confirmation sign out.
+10. **Three Robust UI States**:
    - ⏳ **Loading State**: Clean `CircularProgressIndicator` while data is being fetched.
    - 📭 **Empty State**: Friendly illustration and message with an "Add Expense" call-to-action when no records exist.
    - ⚠️ **Error State**: User-friendly error message with a "Retry" button to easily recover from network hiccups.
@@ -47,10 +52,13 @@ The project follows a standard, beginner-friendly directory structure that is ea
 
 ```text
 lib/
-├── main.dart                          # App entry point, theme configuration (Light & Dark)
+├── main.dart                          # App entry point, auth routing, theme configuration (Light & Dark)
 ├── models/
-│   └── expense_model.dart             # Expense data model & Firestore serialization (toMap / fromFirestore)
+│   ├── expense_model.dart             # Expense data model & Firestore serialization (toMap / fromFirestore)
+│   └── user_model.dart                # AppUser representation
 ├── screens/
+│   ├── login_screen.dart              # Sign-in screen with validation, demo login & reset password
+│   ├── register_screen.dart           # Registration screen for creating new accounts
 │   ├── home_screen.dart               # Main dashboard with monthly summary, list, filters, & search
 │   └── add_edit_expense_screen.dart   # Form for adding and updating expenses with validation
 ├── widgets/
@@ -59,6 +67,7 @@ lib/
 │   ├── expense_summary_card.dart      # Monthly total banner with month navigation controls
 │   └── expense_tile.dart              # Individual expense list tile with edit and delete actions
 └── services/
+    ├── auth_service.dart              # Firebase Auth & demo auth fallback provider
     └── firebase_service.dart          # Firestore CRUD operations & real-time streams
 ```
 
@@ -70,6 +79,7 @@ lib/
 | :--- | :--- | :--- |
 | **Flutter SDK** | `^3.10.7` | Cross-platform UI toolkit |
 | **firebase_core** | `^4.15.0` | Firebase initialization |
+| **firebase_auth** | `^6.7.0` | Firebase user authentication and session management |
 | **cloud_firestore** | `^6.10.0` | Cloud Firestore database for real-time document storage |
 | **intl** | `^0.20.3` | Date formatting (`MMM dd, yyyy`) and currency formatting (`$XX.XX`) |
 

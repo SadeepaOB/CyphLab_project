@@ -81,24 +81,35 @@ class FirebaseService {
   // FIRESTORE & DATA OPERATIONS
   // ---------------------------------------------------------------------------
 
-  /// Stream of all expenses ordered by date descending (most recent first)
-  Stream<List<Expense>> getExpensesStream() {
+  /// Stream of all expenses ordered by date descending (most recent first).
+  /// Optionally scoped to a specific [userId].
+  Stream<List<Expense>> getExpensesStream({String? userId}) {
     checkFirebaseStatus();
 
     if (_isFirebaseReady) {
       // Live Firestore collection stream
-      return FirebaseFirestore.instance
-          .collection(_collectionName)
-          .orderBy('date', descending: true)
-          .snapshots()
-          .map((snapshot) {
-        return snapshot.docs.map((doc) => Expense.fromFirestore(doc)).toList();
+      Query query = FirebaseFirestore.instance.collection(_collectionName);
+      if (userId != null && userId.isNotEmpty) {
+        query = query.where('userId', isEqualTo: userId);
+      }
+
+      return query.snapshots().map((snapshot) {
+        final list = snapshot.docs.map((doc) => Expense.fromFirestore(doc)).toList();
+        list.sort((a, b) => b.date.compareTo(a.date));
+        return list;
       });
     } else {
       // In-memory stream with initial data
       Future.microtask(() {
         _mockExpenses.sort((a, b) => b.date.compareTo(a.date));
-        _mockStreamController.add(List.unmodifiable(_mockExpenses));
+        if (userId != null && userId.isNotEmpty) {
+          final userList = _mockExpenses
+              .where((e) => e.userId == null || e.userId == userId || userId == 'demo-user-123')
+              .toList();
+          _mockStreamController.add(List.unmodifiable(userList));
+        } else {
+          _mockStreamController.add(List.unmodifiable(_mockExpenses));
+        }
       });
       return _mockStreamController.stream;
     }

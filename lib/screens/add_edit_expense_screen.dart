@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/expense_model.dart';
 import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/category_helper.dart';
 
 /// Screen for adding a new expense or editing an existing one.
@@ -105,6 +106,7 @@ class _AddEditExpenseScreenState extends State<AddEditExpenseScreen> {
           category: _selectedCategory,
           date: _selectedDate,
           note: _noteController.text.trim(),
+          userId: AuthService().currentUser?.uid,
         );
         await service.addExpense(newExpense);
       }

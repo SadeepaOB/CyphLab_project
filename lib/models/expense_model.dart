@@ -9,6 +9,7 @@ class Expense {
   final String category;
   final DateTime date;
   final String? note;
+  final String? userId;
 
   Expense({
     required this.id,
@@ -17,6 +18,7 @@ class Expense {
     required this.category,
     required this.date,
     this.note,
+    this.userId,
   });
 
   /// Convert an Expense object into a Map for Firestore storage
@@ -27,6 +29,7 @@ class Expense {
       'category': category,
       'date': Timestamp.fromDate(date),
       'note': note ?? '',
+      if (userId != null) 'userId': userId,
       'createdAt': FieldValue.serverTimestamp(),
     };
   }
@@ -52,6 +55,7 @@ class Expense {
       category: data['category'] as String? ?? 'Other',
       date: parsedDate,
       note: (data['note'] as String?)?.isNotEmpty == true ? data['note'] : null,
+      userId: data['userId'] as String?,
     );
   }
 
@@ -63,6 +67,7 @@ class Expense {
     String? category,
     DateTime? date,
     String? note,
+    String? userId,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -71,6 +76,7 @@ class Expense {
       category: category ?? this.category,
       date: date ?? this.date,
       note: note ?? this.note,
+      userId: userId ?? this.userId,
     );
   }
 }
